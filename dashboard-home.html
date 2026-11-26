@@ -1,0 +1,564 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fashion Studio - Dashboard</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    body { font-size: 14px; background: #fff; }
+    [x-cloak] { display: none !important; }
+    .sidebar-transition { transition: width .25s ease; }
+    .nav-active { background: #f1efff; color: #6255e7; }
+    .soft-scroll::-webkit-scrollbar { height: 5px; width: 5px; }
+    .soft-scroll::-webkit-scrollbar-thumb { background: #ddd; border-radius: 20px; }
+  </style>
+</head>
+
+<body x-data="studioDashboard()" class="text-gray-900">
+
+<div class="min-h-screen flex">
+
+  <!-- SIDEBAR -->
+  <aside
+    class="sidebar-transition fixed lg:sticky top-0 left-0 z-40 h-screen bg-white border-r border-gray-200 flex flex-col"
+    :class="sidebarOpen ? 'w-[245px] translate-x-0' : 'w-[245px] -translate-x-full lg:translate-x-0'"
+  >
+
+    <!-- Brand -->
+    <div class="h-[66px] px-5 flex items-center justify-between border-b border-gray-100">
+      <a href="#" class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-[#6255e7] text-white flex items-center justify-center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-6 h-6">
+            <circle cx="12" cy="12" r="9"/>
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M5.6 5.6 9 9m6 6 3.4 3.4M18.4 5.6 15 9m-6 6-3.4 3.4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="font-bold text-[15px] tracking-tight">Fashion Studio</div>
+          <div class="text-[10px] text-gray-400">AI CREATIVE WORKSPACE</div>
+        </div>
+      </a>
+
+      <button @click="sidebarOpen = false" class="lg:hidden text-gray-400">✕</button>
+    </div>
+
+    <!-- Workspace -->
+    <div class="px-3 pt-4">
+      <button class="w-full flex items-center justify-between p-2.5 rounded-lg border border-gray-200 hover:bg-gray-50">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center font-semibold text-gray-600">S</div>
+          <div class="text-left">
+            <div class="text-xs font-semibold">Studio Workspace</div>
+            <div class="text-[10px] text-gray-400">Free Plan</div>
+          </div>
+        </div>
+        <svg class="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 10 5 5 5-5"/></svg>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="px-3 pt-4 pb-3">
+      <div class="relative">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m16 16 4 4"/></svg>
+        <input
+          type="text"
+          x-model="search"
+          placeholder="Search projects..."
+          class="w-full pl-9 pr-3 py-2.5 rounded-lg bg-gray-50 border border-transparent focus:border-violet-300 focus:bg-white outline-none text-xs"
+        >
+      </div>
+    </div>
+
+    <!-- Main Navigation -->
+    <nav class="px-3 space-y-1">
+
+      <template x-for="item in mainNav" :key="item.name">
+        <button
+          @click="navigate(item.name)"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition"
+          :class="activePage === item.name ? 'nav-active font-semibold' : 'text-gray-600 hover:bg-gray-50'"
+        >
+          <span class="w-5 h-5 flex items-center justify-center text-base" x-html="item.icon"></span>
+          <span x-text="item.name"></span>
+          <span x-show="item.badge" x-text="item.badge" class="ml-auto text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded"></span>
+        </button>
+      </template>
+
+    </nav>
+
+    <!-- Content Navigation -->
+    <div class="px-5 mt-7 mb-2">
+      <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Your Library</p>
+    </div>
+
+    <nav class="px-3 space-y-1">
+      <template x-for="item in libraryNav" :key="item.name">
+        <button
+          @click="navigate(item.name)"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] transition"
+          :class="activePage === item.name ? 'nav-active font-semibold' : 'text-gray-600 hover:bg-gray-50'"
+        >
+          <span class="w-5 h-5 flex items-center justify-center" x-html="item.icon"></span>
+          <span x-text="item.name"></span>
+        </button>
+      </template>
+    </nav>
+
+    <!-- Bottom Navigation -->
+    <div class="mt-auto border-t border-gray-100 pt-3 pb-4 px-3 space-y-1">
+
+      <button @click="navigate('Usage & Billing')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-[13px]">
+        <span>◷</span> Usage & Billing
+      </button>
+
+      <button @click="navigate('Settings')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-50 text-[13px]">
+        <span>⚙</span> Settings
+      </button>
+
+      <!-- Upgrade -->
+      <div class="bg-[#f5f3ff] rounded-xl p-3 mt-3">
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-lg">✦</span>
+          <span class="text-xs font-semibold text-gray-800">Upgrade to Pro</span>
+        </div>
+        <p class="text-[11px] leading-relaxed text-gray-500 mb-3">
+          Unlock more credits, premium templates and advanced AI tools.
+        </p>
+        <button @click="showUpgrade = true" class="w-full bg-[#6255e7] hover:bg-[#5043d1] text-white py-2 rounded-lg text-xs font-semibold">
+          Explore Plans →
+        </button>
+      </div>
+
+      <!-- Profile -->
+      <button class="flex items-center gap-2.5 w-full pt-3 px-1">
+        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">AJ</div>
+        <div class="text-left flex-1 min-w-0">
+          <p class="text-xs font-semibold">Alex Johnson</p>
+          <p class="text-[10px] text-gray-400">Personal Workspace</p>
+        </div>
+        <span class="text-gray-400">⌄</span>
+      </button>
+
+    </div>
+  </aside>
+
+  <!-- Mobile overlay -->
+  <div x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity class="fixed inset-0 bg-black/30 z-30 lg:hidden" x-cloak></div>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 min-w-0 bg-white">
+
+    <!-- TOPBAR -->
+    <header class="h-[66px] border-b border-gray-100 flex items-center justify-between px-5 lg:px-9 sticky top-0 bg-white/95 backdrop-blur z-20">
+
+      <div class="flex items-center gap-3">
+        <button @click="sidebarOpen = true" class="lg:hidden p-2 rounded-lg hover:bg-gray-100">
+          ☰
+        </button>
+
+        <div class="hidden sm:flex items-center gap-2 text-gray-400 text-xs">
+          <span>Workspace</span>
+          <span>/</span>
+          <span class="text-gray-800 font-semibold" x-text="activePage"></span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button class="relative p-2 text-gray-500 hover:bg-gray-50 rounded-lg">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+        </button>
+
+        <div class="w-px h-7 bg-gray-200"></div>
+
+        <button class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center font-semibold text-xs">AJ</div>
+          <span class="hidden sm:block text-xs font-medium">Alex Johnson</span>
+          <span class="text-gray-400 text-xs">⌄</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- PAGE CONTAINER -->
+    <div class="max-w-[1500px] mx-auto px-5 lg:px-9 py-8">
+
+      <!-- HOME PAGE -->
+      <div x-show="activePage === 'Home'" x-transition>
+
+        <!-- Heading -->
+        <section class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
+          <div>
+            <h1 class="text-[24px] font-bold tracking-tight">Home</h1>
+            <p class="text-gray-500 text-xs mt-1">Welcome back, Alex. What would you like to create today?</p>
+          </div>
+
+          <button @click="navigate('Create Studio Shoot')" class="bg-[#6255e7] hover:bg-[#5043d1] text-white px-4 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-2">
+            <span class="text-base">+</span>
+            New Studio Shoot
+          </button>
+        </section>
+
+        <!-- OVERVIEW METRICS -->
+        <section class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+
+          <template x-for="stat in stats" :key="stat.name">
+            <div class="border border-gray-200 rounded-xl p-4 hover:border-gray-300 transition">
+              <div class="flex justify-between items-center mb-3">
+                <p class="text-xs text-gray-500" x-text="stat.name"></p>
+                <span class="text-lg text-gray-400" x-text="stat.icon"></span>
+              </div>
+              <div class="flex items-end justify-between">
+                <h3 class="text-2xl font-bold tracking-tight" x-text="stat.value"></h3>
+                <span class="text-[10px] text-emerald-600 font-medium" x-text="stat.change"></span>
+              </div>
+            </div>
+          </template>
+
+        </section>
+
+        <!-- QUICK ACTIONS -->
+        <section class="mb-9">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-[15px] font-semibold">Quick Actions</h2>
+              <p class="text-xs text-gray-400 mt-1">Everything you need to create professional product images.</p>
+            </div>
+            <button @click="navigate('Explore')" class="text-xs font-medium text-[#6255e7] hover:underline">Explore all →</button>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
+
+            <template x-for="tool in quickActions" :key="tool.name">
+              <button @click="navigate(tool.name)" class="group text-left border border-gray-200 rounded-xl p-3 hover:border-[#b7afff] hover:bg-[#faf9ff] transition">
+                <div class="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center text-xl mb-3 group-hover:bg-white" x-text="tool.icon"></div>
+                <h3 class="font-semibold text-xs mb-1" x-text="tool.name"></h3>
+                <p class="text-[11px] text-gray-400 leading-relaxed" x-text="tool.desc"></p>
+              </button>
+            </template>
+
+          </div>
+        </section>
+
+        <!-- FEATURED STUDIO TOOLS -->
+        <section class="mb-9">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-[15px] font-semibold">Create with AI</h2>
+              <p class="text-xs text-gray-400 mt-1">Discover new ways to showcase your products.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <template x-for="feature in featuredTools" :key="feature.title">
+              <button @click="navigate(feature.action)" class="text-left border border-gray-200 rounded-xl overflow-hidden hover:border-gray-300 hover:shadow-sm transition group">
+                <div class="h-[175px] overflow-hidden bg-gray-100">
+                  <img :src="feature.image" :alt="feature.title" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-500">
+                </div>
+                <div class="p-3.5 flex items-center justify-between">
+                  <div>
+                    <h3 class="font-semibold text-[13px]" x-text="feature.title"></h3>
+                    <p class="text-[11px] text-gray-400 mt-1" x-text="feature.desc"></p>
+                  </div>
+                  <span class="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center group-hover:bg-[#f1efff] group-hover:text-[#6255e7]">→</span>
+                </div>
+              </button>
+            </template>
+
+          </div>
+        </section>
+
+        <!-- RECENT PROJECTS -->
+        <section class="mb-9">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-[15px] font-semibold">Recent Projects</h2>
+              <p class="text-xs text-gray-400 mt-1">Pick up where you left off.</p>
+            </div>
+            <button @click="navigate('My Projects')" class="text-xs text-[#6255e7] font-medium hover:underline">View all →</button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+
+            <template x-for="project in filteredProjects" :key="project.name">
+              <div class="group border border-gray-200 rounded-xl overflow-hidden hover:shadow-sm transition cursor-pointer">
+                <div class="relative h-[165px] bg-gray-100">
+                  <img :src="project.image" :alt="project.name" class="w-full h-full object-cover group-hover:scale-[1.03] transition duration-500">
+
+                  <span
+                    class="absolute top-2.5 right-2.5 text-[10px] font-semibold px-2 py-1 rounded-md"
+                    :class="project.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' : project.status === 'Processing' ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600'"
+                    x-text="project.status"
+                  ></span>
+                </div>
+
+                <div class="p-3">
+                  <div class="flex justify-between items-center">
+                    <h3 class="text-xs font-semibold truncate" x-text="project.name"></h3>
+                    <button @click.stop="project.menu = !project.menu" class="text-gray-400 hover:text-gray-800 px-1">•••</button>
+                  </div>
+                  <div class="text-[10px] text-gray-400 mt-1">
+                    <span x-text="project.images"></span> images
+                    <span class="mx-1">·</span>
+                    <span x-text="project.updated"></span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <div x-show="filteredProjects.length === 0" class="col-span-full py-10 text-center text-sm text-gray-400">
+              No projects found.
+            </div>
+
+          </div>
+        </section>
+
+        <!-- INSPIRATION TEMPLATES -->
+        <section class="mb-9">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="text-[15px] font-semibold">Inspiration & Templates</h2>
+              <p class="text-xs text-gray-400 mt-1">Find the perfect visual style for your next shoot.</p>
+            </div>
+            <button @click="navigate('Templates')" class="text-xs text-[#6255e7] font-medium hover:underline">Browse templates →</button>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+
+            <template x-for="template in templates" :key="template.name">
+              <button @click="selectedTemplate = template.name; navigate('Create Studio Shoot')" class="text-left group">
+                <div class="h-[185px] rounded-xl overflow-hidden bg-gray-100">
+                  <img :src="template.image" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                </div>
+                <div class="mt-2">
+                  <p class="text-xs font-semibold" x-text="template.name"></p>
+                  <p class="text-[10px] text-gray-400 mt-1" x-text="template.category"></p>
+                </div>
+              </button>
+            </template>
+
+          </div>
+        </section>
+
+        <!-- STUDIO COLLECTIONS -->
+        <section class="mb-8">
+          <div class="mb-4">
+            <h2 class="text-[15px] font-semibold">Your Studio Collections</h2>
+            <p class="text-xs text-gray-400 mt-1">Manage the creative assets for your brand.</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <template x-for="collection in collections" :key="collection.name">
+              <button @click="navigate(collection.action)" class="border border-gray-200 rounded-xl p-4 flex items-center gap-3 hover:bg-gray-50 text-left">
+                <div class="w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center text-xl" x-text="collection.icon"></div>
+                <div class="flex-1">
+                  <h3 class="text-xs font-semibold" x-text="collection.name"></h3>
+                  <p class="text-[10px] text-gray-400 mt-1" x-text="collection.count"></p>
+                </div>
+                <span class="text-gray-400">→</span>
+              </button>
+            </template>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- OTHER NAVIGATION PAGES -->
+      <div x-show="activePage !== 'Home'" x-cloak class="py-3">
+
+        <div class="flex items-center justify-between mb-7">
+          <div>
+            <h1 class="text-2xl font-bold" x-text="activePage"></h1>
+            <p class="text-xs text-gray-400 mt-1">Manage your creative workspace and assets.</p>
+          </div>
+          <button @click="navigate('Home')" class="border border-gray-200 rounded-lg px-3 py-2 text-xs hover:bg-gray-50">← Back Home</button>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl p-10 text-center">
+          <div class="text-4xl mb-4">✦</div>
+          <h2 class="font-semibold text-base" x-text="activePage"></h2>
+          <p class="text-xs text-gray-400 mt-2">This module can be developed as a separate workspace screen.</p>
+          <button @click="navigate('Home')" class="mt-5 bg-[#6255e7] text-white px-4 py-2 rounded-lg text-xs">Return to Home</button>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="border-t border-gray-100 pt-5 pb-3 flex flex-col sm:flex-row justify-between gap-2 text-[10px] text-gray-400">
+        <span>© 2026 Fashion Studio. All rights reserved.</span>
+        <div class="flex gap-4">
+          <a href="#" class="hover:text-gray-700">Privacy</a>
+          <a href="#" class="hover:text-gray-700">Terms</a>
+          <a href="#" class="hover:text-gray-700">Support</a>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+
+</div>
+
+<!-- UPGRADE MODAL -->
+<div x-show="showUpgrade" x-cloak x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" @click.self="showUpgrade = false">
+  <div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl" @click.stop>
+    <div class="flex justify-between items-center">
+      <h2 class="font-bold text-lg">Upgrade your workspace</h2>
+      <button @click="showUpgrade = false" class="text-gray-400 text-xl">×</button>
+    </div>
+    <p class="text-sm text-gray-500 mt-2">Unlock advanced AI features and more creative possibilities.</p>
+    <div class="bg-[#f5f3ff] p-4 rounded-xl mt-5">
+      <p class="font-semibold text-sm">Studio Pro</p>
+      <p class="text-xs text-gray-500 mt-1">More credits · Premium templates · Advanced AI tools</p>
+    </div>
+    <button @click="showUpgrade = false" class="mt-5 w-full py-3 bg-[#6255e7] text-white rounded-lg text-sm font-semibold">Explore Plans</button>
+  </div>
+</div>
+
+<script>
+function studioDashboard() {
+  return {
+    sidebarOpen: false,
+    activePage: 'Home',
+    search: '',
+    showUpgrade: false,
+    selectedTemplate: '',
+
+    mainNav: [
+      { name: 'Home', icon: '⌂' },
+      { name: 'Create Studio Shoot', icon: '✧' },
+      { name: 'Explore', icon: '◈' },
+      { name: 'Batch Studio', icon: '▱' },
+      { name: 'Activity', icon: '◷' }
+    ],
+
+    libraryNav: [
+      { name: 'Products', icon: '▣' },
+      { name: 'Assets Library', icon: '▧' },
+      { name: 'Brand Library', icon: '◩' },
+      { name: 'Templates', icon: '▦' },
+      { name: 'My Projects', icon: '▤' }
+    ],
+
+    stats: [
+      { name: 'Images Created', value: '248', change: '↑ 12% this month', icon: '▧' },
+      { name: 'Active Projects', value: '12', change: '↑ 8% this month', icon: '▱' },
+      { name: 'Credits Remaining', value: '840', change: 'View usage →', icon: '✧' }
+    ],
+
+    quickActions: [
+      { name: 'Create Studio Shoot', desc: 'Turn garments into model photography.', icon: '✧' },
+      { name: 'AI Models', desc: 'Choose models for your products.', icon: '♙' },
+      { name: 'Backgrounds', desc: 'Explore studio environments.', icon: '▧' },
+      { name: 'Poses', desc: 'Discover professional poses.', icon: '◉' },
+      { name: 'Accessories', desc: 'Complete your fashion look.', icon: '◇' }
+    ],
+
+    featuredTools: [
+      {
+        title: 'Create a Studio Shoot',
+        desc: 'Generate professional fashion images.',
+        action: 'Create Studio Shoot',
+        image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=900&q=85'
+      },
+      {
+        title: 'Explore AI Models',
+        desc: 'Find the right model for your brand.',
+        action: 'Explore',
+        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&q=85'
+      },
+      {
+        title: 'Product Photography',
+        desc: 'Make every product stand out.',
+        action: 'Create Studio Shoot',
+        image: 'https://images.unsplash.com/photo-1543076447-215ad9ba6923?w=900&q=85'
+      }
+    ],
+
+    projects: [
+      {
+        name: 'Summer Collection',
+        images: 12,
+        updated: '2 hours ago',
+        status: 'Completed',
+        image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80'
+      },
+      {
+        name: 'Streetwear Collection',
+        images: 8,
+        updated: 'Yesterday',
+        status: 'Processing',
+        image: 'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=600&q=80'
+      },
+      {
+        name: 'Party Wear Look',
+        images: 15,
+        updated: '2 days ago',
+        status: 'Completed',
+        image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80'
+      },
+      {
+        name: 'Winter Collection',
+        images: 6,
+        updated: '3 days ago',
+        status: 'Draft',
+        image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80'
+      }
+    ],
+
+    templates: [
+      {
+        name: 'Studio Minimal',
+        category: 'Clean Studio',
+        image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=600&q=80'
+      },
+      {
+        name: 'Lifestyle',
+        category: 'Outdoor',
+        image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&q=80'
+      },
+      {
+        name: 'Editorial',
+        category: 'Fashion Editorial',
+        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&q=80'
+      },
+      {
+        name: 'Luxury Fashion',
+        category: 'Premium',
+        image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600&q=80'
+      }
+    ],
+
+    collections: [
+      { name: 'Model Library', count: '24 models', icon: '♙', action: 'Assets Library' },
+      { name: 'Background Library', count: '48 backgrounds', icon: '▧', action: 'Assets Library' },
+      { name: 'Pose Collection', count: '36 poses', icon: '◉', action: 'Assets Library' }
+    ],
+
+    get filteredProjects() {
+      if (!this.search.trim()) return this.projects;
+      return this.projects.filter(p =>
+        p.name.toLowerCase().includes(this.search.toLowerCase())
+      );
+    },
+
+    navigate(page) {
+      this.activePage = page;
+      this.sidebarOpen = false;
+    }
+  }
+}
+</script>
+
+</body>
+</html>
